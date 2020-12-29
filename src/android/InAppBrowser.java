@@ -1311,27 +1311,36 @@ public class InAppBrowser extends CordovaPlugin {
             }
             // Test for whitelisted custom scheme names like mycoolapp:// or twitteroauthresponse:// (Twitter Oauth Response)
             else if (!url.startsWith("http:") && !url.startsWith("https:") && url.matches("^[A-Za-z0-9+.-]*://.*?$")) {
-                if (allowedSchemes == null) {
-                    String allowed = preferences.getString("AllowedSchemes", null);
-                    if(allowed != null) {
-                        allowedSchemes = allowed.split(",");
+                try {
+                    Intent intent = new Intent(Intent.ACTION_VIEW);
+                    intent.setData(Uri.parse(url));
+                    cordova.getActivity().startActivity(intent);
+                    closeDialog();
+                    override = true;
+                } catch (android.content.ActivityNotFoundException e) {
+                    LOG.e(LOG_TAG, "Activity Not Found" + url + ": " + e.toString());
+                    if (allowedSchemes == null) {
+                        String allowed = preferences.getString("AllowedSchemes", null);
+                        if(allowed != null) {
+                            allowedSchemes = allowed.split(",");
+                        }
                     }
-                }
-                if (allowedSchemes != null) {
-                    for (String scheme : allowedSchemes) {
-                        if (url.startsWith(scheme)) {
-                            try {
-                                JSONObject obj = new JSONObject();
-                                obj.put("type", "customscheme");
-                                obj.put("url", url);
-                                sendUpdate(obj, true);
-                                override = true;
-                            } catch (JSONException ex) {
-                                LOG.e(LOG_TAG, "Custom Scheme URI passed in has caused a JSON error.");
+                    if (allowedSchemes != null) {
+                        for (String scheme : allowedSchemes) {
+                            if (url.startsWith(scheme)) {
+                                try {
+                                    JSONObject obj = new JSONObject();
+                                    obj.put("type", "customscheme");
+                                    obj.put("url", url);
+                                    sendUpdate(obj, true);
+                                    override = true;
+                                } catch (JSONException ex) {
+                                    LOG.e(LOG_TAG, "Custom Scheme URI passed in has caused a JSON error.");
+                                }
                             }
                         }
                     }
-                }
+                }            
             }
 
             if (useBeforeload) {
