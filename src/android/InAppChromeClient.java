@@ -34,6 +34,7 @@ import android.webkit.WebStorage;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.webkit.GeolocationPermissions.Callback;
+import android.webkit.PermissionRequest;
 
 public class InAppChromeClient extends WebChromeClient {
 
@@ -45,6 +46,13 @@ public class InAppChromeClient extends WebChromeClient {
         super();
         this.webView = webView;
     }
+    
+    public void onPermissionRequest(final PermissionRequest request) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            request.grant(request.getResources());
+        }
+    }
+
     /**
      * Handle database quota exceeded notification.
      *
@@ -157,7 +165,6 @@ public class InAppChromeClient extends WebChromeClient {
         WebView inAppWebView = view;
         final WebViewClient webViewClient =
                 new WebViewClient() {
-                    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
                     @Override
                     public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                         inAppWebView.loadUrl(request.getUrl().toString());
